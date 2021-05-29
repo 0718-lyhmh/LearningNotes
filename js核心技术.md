@@ -87,273 +87,86 @@ arr.redude(function(pre,cur,index,array){
 })
 ```
 
-### 四、面向对象的程序设计
+### 四、函数表达式
 
-#### 1、属性类型
+#### 1、递归
 
-数据属性
-
-- [[Configurable]] : 能否通过delete删除属性从而重新定义，默认为true
-- [[Enumerable]] : 能否枚举（即能否通过for-in返回属性），默认为true
-- [[Writable]] : 能否修改属性，默认为true
-- [[Value]] : 保存属性的值，默认为undefined
-
-访问器属性
-
-- [[Configurable]] : 能否通过delete删除属性从而重新定义，默认为true
-- [[Enumerable]] : 能否枚举（即能否通过for-in返回属性），默认为true
-- [[Get]] : 读取属性时调用，默认为undefined
-- [[Set]] : 写入属性时调用，默认为undefined
-
-修改数据属性默认值或是定义访问器属性只能通过Object.defineProperty()
+arguments.callee是一个指向正在执行的函数的指针，可以用它来实现对函数的递归
 
 ```javascript
-var person = {}
-//调用这个方法，如果不指定configurable，enumerable，writable，则默认都会为false
-Object.defineProperty(person,"name",{
-    writable : false,
-    value : 'Hebe'
-})
-
-var boob = {
-    _year = 2004,
-    edition = 1
-}
-Object.defineProperty(book,'year',{
-    get:function(){
-        return this._year
-    },
-    set:function(newValue){
-        if(newValue>20004){
-            this._year = newValue;
-            this.edition +=newValue - 2004
-        }
+function factorail(num){
+    if(num<1){
+        return 1
     }
-})
-book.year = 2005;
-alert(book.edition) //2
-
-//定义多个属性可以使用Object.defineProperties(),读取属性特性使用Object.getOwnPropertyDescriptor()
+    else{
+        return num * factorail(num-1)
+        //return num * arguments.callee(num-1)
+    }
+}
+var anotherFactorail = factorail
+factorail = null
+alert(anotherFactorail(4))  
+//出错，因为调用annotherFactorail函数时，里面的factorail已不再是函数可使用
 
 ```
 
-#### 2、创建对象
+#### 2、闭包
 
-传统Object构造函数和字面量模式都可创建对象，但是创建多个对象时会大量重复代码
+闭包是指有权访问另一个函数作用域变量的函数。创建闭包常见的方式就是在一个函数内部创建另一个函数
 
-- 工厂模式（能创建多个相似对象，却无法识别对象（不知道一个对象的类型））
+- 闭包与作用域：无论什么时候在函数中访问一个变量时，就会从作用域中搜索具有相应名字的变量。一般来说，当函数执行完毕后，局部活动变量就会被销毁，内存中仅保存全局作用域。但是闭包不同，当函数返回一个闭包时，闭包的作用域引用着外部函数的活动对象，在外部环境执行完毕后，其作用域会被销毁，但是活动对象仍然存在内存中，知道闭包函数被销毁才会被释放
+- 闭包与变量：闭包只能取得包含函数中任何变量的最后一个值，闭包中保存的是整个变量对象，而不是某个特殊值
+- 闭包的this：在全局环境中，this是指window。而函数被某个对象调用时，this是那个对象。而闭包的this指向的是全局window（不适用call或apply的条件下）。因为每个函数每调用时，活动对象都会自动创建this和arguments两个特殊变量。内部函数在搜索这两个变量中，只会搜索到其活动变量为止，因此不可能直接访问到外部函数的这两个变量。如若想要访问，就要把这两个变量保存到闭包函数能够访问到的变量中。
+- 容易导致内存泄漏
+- 创建私有变量和特权方法，在闭包中可以创建公共方法去访问他们
+- 单例对象（只有一个实例的对象）的模块模式和增强的模块模式
 
-  ```javascript
-  function createPerson(name,age,job){
-      var obj = new Object();
-      obj.name = name;
-      obj.age = age;
-      obj.job = job;
-      o.sayName = function(){
-          alert(obj.name)
-      }
-      return obj
-  }
-  var person1 = createPerson('Hebe',19,'software')
-  var person2 = createPerson('Alice',20,'hardware')
-  ```
+### 五、BOM相关
 
-- 构造函数模式(当有多个方法时，需要定义多个全局方法引用，封装性差)
+#### 1、window
 
-  使用new操作符创建对象。实际会经历以下4个步骤
+BOM的核心对象是window，它具有双重角色，既是javascript访问浏览器窗口的一个接口，又是ECMAScript规定的一个Global对象。
 
-  - 创建一个新对象
-  - 将构造函数的作用域赋给新对象（即this指向这个新对象）
-  - 执行构造函数的代码（为新对象添加属性）
-  - 返回新对象
+- 全局作用域：在全局作用域中定义的变量和方法都成为window对象的属性和方法。全局变量不能通过delete操作符删除，而直接在window对象上定义的属性和方法可以。location、navigator等都是window的属性
+
+- 窗口位置（大多浏览器支持window.screenLeft，FireFox是window.screenX）
 
   ```javascript
-  function Person(name,age,job){
-      this.name = name;
-      this.age = age;
-      this.job = job;
-     /* this.sayName = function(){
-          alert(this.name)
-      }*/
-      this.sayName = sayName
-  }
-  function sayName(){
-      alert(this.name)
-  }
-  var person1 = new Person('Hebe',19,'software')
-  var person2 = new Person('Alice',20,'hardware')
+  var leftPos = (typeof window.screenLeft == 'number')? window.screenLeft : window.screenX;
+  var topPos = (typeof window.screenTop == 'number')? window..screenTop : window.screenY
+  
+  //可通过moveTo（）、moveBy（）移动窗口位置
   ```
 
-- 原型模式(引用类型变量（如数组）会共享)
+- 窗口大小：innerWidth,innerHeight,outerWidth,outerHeight，document.documentElement.clientWidth，document.documentElement.clientHeight,可使用resizeTo和resizeBy调整浏览器窗口的大小
 
-  使用hasOwnProperty()和in可判断属性存在对象上还是存在原型中
+间歇调用和超时调用：setTimeout，clearTimeout，setInterval，clearInterval。尽量避免使用间歇调用，因为后一个间歇调用有可能会在前一个间歇调用结束之前启动，使用超时调用模拟间歇调用可以避免这个问题，这两个调用中的回调函数this指向window，除非使用箭头函数
 
-  ```javascript
-  function hasPrototypeProperty(object,name){
-      return !object.hasOwnProperty(name)&&(name in Object)
-  }
-  
-  function Person(){}
-  Person.prototype.name = "Hebe";
-  Person.prototype.age = 29;
-  Person.prototype.job = "software";
-  person.prototype.sayName = function(){
-      alert(this.name)
-  }
-  var person = new Person()
-  
-  function Person(){}
-  Person.prototype = {
-      constructor:Person,
-      name : 'Hebe',
-      age : 19,
-      job : 'software',
-      sayName : function(){
-          alert(this.name)
-      }
-  }
-  
-  ```
+系统对话框：alert（提示）//警告框，confirm（提示）//确认框，prompt（提示，输入内容）//提示框
 
-- 组合构造函数和原型模式(常用)
+#### 2、location
 
-  ```javascript
-  function Person(name,age,job){
-      this.name = name;
-      this.age = age;
-      this.job = job;
-      this.friends = ['Alice','Bob']
-  }
-  Person.prototype = {
-      constructor : Person,
-      sayName = function(){
-          alert(this.name)
-      }
-  }
-  ```
+既是window对象，也是document对象，所以window.location和document.location引用的是同一个对象。属性有hash、host、hostname、href、pathname、port、protocol、search。除了hash，修改其他属性页面都会以新的URL重新加载，并生成一条历史记录，使用replace不会生成记录，即不能回退。
 
-- 动态原型模式
+```javascript
+//使用assign方法立即打开新的URL并且生成记录
+location.assign("http://www.baidu.com")
+//使用一下两种方法设置URL也是调用的assign方法
+window.location = "http://www.baidu.com"
+location.href = "http://www.baidu.com" //最常用
+```
 
-- 寄生构造函数模式(代码和工厂模式相同，只是创建实例是使用new操作符)
+#### 3、navigator
 
-- 稳妥构造函数模式（没有公共属性，即不使用this，所以访问属性只能通过方法访问，并且创建实例不使用new）
+常用于检测显示网页的浏览器类型。可以检测插件plugins、用户代理userAgent等
 
-#### 3、继承
+#### 4、screen
 
-原型链：每个构造函数都有一个原型对象（prototype），原型对象都有一个指向构造函数的指针（constructor），而实例都包含一个指向原型对象的指针（__proto__）。但是原型对象中也包含一个指向另一个原型的指针，以此递进，知道原型对象为null，这就是原型链。
+常用来获取屏幕可用宽度（screen.availWidth）、高度（screen.availHeight）
 
-- 原型链继承(引用类型的属性被所有实例共享、不能向超类型传递参数)
+#### 5、history
 
-  改变SubType的原型对象，使其原型对象是SuperType的实例，这样，SubType的原型对象中不仅具有SuperType的属性和方法，还有个指针指向SuperType的原型
+保存用户上网的历史记录，history.go（），参数为正数表示前进，负数表示后退，字符串地址表示跳转到历史记录中最近的位置。也可使用back和forward后退或前进一步。
 
-  ```javascript
-  function SuperType(){
-      this.property = true
-  }
-  SuperType.prototype.getSuperValue = function(){
-      return this.property
-  }
-  
-  function SubType(){
-      this.subProperty = false
-  }
-  SubType.prototype = new SuperType()
-  SubType.prototype.getSubValue = function(){
-      return this.subProperty
-  }
-  
-  var instance = new SubType()
-  alert(instance.getSuperValue)  //true
-  ```
+### 六、DOM相关
 
-- 借助构造函数继承(方法都在构造函数中定义，无法复用)
-
-  ```javascript
-  function SuperType(name){
-      this.name = name;
-      this.color = ['red','orange','green'];
-  }
-  
-  function SubType(){
-      SuperType.call(this,'Hebe');
-      this.age = 20;
-  }
-  
-  var instance = new SubType()
-  ```
-
-- 组合继承（调用两次SuperType构造函数，使得SubType的实例中具有SuperType的属性，SubType的原型中也有）
-
-  ```javascript
-  function SuperType(name){
-      this.name = name;
-      this.color = ['red','orange','green'];
-  }
-  SuperType.prototype.sayName = function(){
-      alert(this.name)
-  }
-  function SubType(name.age){
-      SuperType.call(this,name) //继承属性，第一次调用
-      this.age = age
-  }
-  
-  SubType.prototype = new SuperType() //继承方法，第二次调用
-  var instance = new SubType("Hebe",20)
-  ```
-
-- 原型式继承(引用类型属性只是浅复制，会被共享)
-
-  ```javascript
-  function object(obj){  
-      //传入一个对象，返回对象原型指向这个对象的实例
-      function F(){
-      }
-      F.prototype = obj
-      return new F()
-  }
-  
-  var person = {
-      name = "Hebe",
-      age = 20
-  }
-  
-  var person1 = object(person)
-  // var person1 = Object.create(person)
-  ```
-
-- 寄生式继承(方法不能复用)
-
-  ```javascript
-  function createObject(original){
-      var obj = object(original)
-      obj.sayHi = function(){
-          alert('Hi')
-      }
-  }
-  ```
-
-- 寄生组合式继承（相比组合式继承，只调用一次超类型的构造函数，效率高）
-
-  ```javascript
-  function inheritPrototype(SubType,SuperType){
-      var prototype = object(SuperType)
-      prototype.constructor = SubType
-      SubType.prototype = prototype
-  }
-  
-  function SuperType(name){
-      this.name = name
-  }
-  SuperType.prototype.sayName =function (){
-      return this.name
-  }
-  
-  function SubType(name,age){
-      SuperType.call(this,name)
-      this.age = age
-  }
-  
-  inheritPrototype(SubType,SuperType)
-  ```
-
-  

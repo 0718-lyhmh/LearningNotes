@@ -252,7 +252,7 @@ this.$router.push({
 
 ### 7、this.$router与this.$route的区别
 
-this.$router是一个VueRouter对象，是一个全局路由器对象，在配置好路由映射之后，可在页面中使用其push（）、replace（），go（）等方法、
+this.$router是一个VueRouter对象，是一个全局路由对象，在配置好路由映射之后，可在页面中使用其push（）、replace（），go（）等方法、
 
 this.$route表示当前正在跳转的路由器对象，可调用其path（），params（），query（）等方法
 
@@ -381,6 +381,18 @@ methods:{
     })
 }
 ```
+
+# 七、项目
+
+### 1、better-scroll可滚动区域的bug
+
+- scrollerHeight属性是根据放在better-scroll中content的子组件的高度
+
+- 但是在首页中，刚开始计算scrollerHeight属性时，只有item的高度，没有图片的高度
+
+- 所以计算出来的可滚动高度是错误的，这就导致项目中上拉只能上拉一小部分
+
+  解决方法：监听每一张图片是否加载完成，只要一张图片加载完成，就执行一次refresh()
 
 
 
