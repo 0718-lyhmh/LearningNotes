@@ -57,7 +57,7 @@ v-if是通过是否操作dom结点进行是否显示，v-show则是通过添加c
 
 ### 6、v-for中key的作用
 
-为了提高性能，在组件中绑定一个与数据唯一对应的值，使得底层进行diff算法是能找到能快找到需要更新的组件。如果不绑定唯一对应的key，vue底层就不是对dom元素进行移动来匹配数据项，而是通过简单的就地复用，使得性能降低
+为了提高性能，在组件中绑定一个与数据唯一对应的值，使得底层进行diff算法时能更快找到需要更新的组件。如果不绑定唯一对应的key，vue底层就不是对dom元素进行移动来匹配数据项，而是通过简单的就地复用，使得性能降低
 
 ### 7、为什么组件中data需要返回的是函数
 
@@ -75,7 +75,9 @@ v-if是通过是否操作dom结点进行是否显示，v-show则是通过添加c
 
 获取根实例 $root
 
-Vue.prototype.$bus = new Vue()   // event Bus 用于无关系组件间的通信，this.$bus.$emit发送事件   this.$bus.$on监听事件
+非父子组件可创建一个事件中心：$bus，Vue.prototype.$bus = new Vue()   //this.$bus.$emit发送事件   this.$bus.$on监听事件
+
+还可用vueX
 
 ### 9、v-model修饰符有哪些？
 
@@ -84,6 +86,38 @@ Vue.prototype.$bus = new Vue()   // event Bus 用于无关系组件间的通信�
 .number :  输入数据为number类型，而不是默认的string类型
 
 .trim ： 剥除输入框的空格
+
+### 10、vue是生命周期有哪些？
+
+beforeCreate：
+
+created：完成数据观测、属性和方法是运算，$el还没有显现
+
+beforeMounte：render函数首次调用，编译模板，把data里面的数据和模板编译成html，但是还没有挂载到页面
+
+mounted：el被新创建的vm.$el替换，编译好的html内容替换成el属性指向的DOM对象，完成html页面渲染。
+
+beforeUpdate：
+
+updated：
+
+beforeDestroy：
+
+destroyed：
+
+使用keep-alive时，还增加两个生命周期是actived（缓存的组件激活时调用）和deactived（缓存的组件停用时调用）
+
+数据请求一般放在created中进行，因为这时已经完成了数据观测，可以访问和修改data中数据。虽然页面渲染是在mounted这个生命周期中完成的，但是因为数据请求是异步操作，vue中异步操作是不会影响生命周期的进行的，也就是说在页面渲染之前把需要渲染的数据也早放在data中越好。
+
+### 11、vue-Router中hash模式与history模式的区别
+
+使用hash模式的，url带有#符号，#符号以及后面的字符就是哈希值，前端可以通过监听hashchange事件去进行不同的操作，并且hash值是不会跟着请求传给后端，也就是说hash模式刷新时不会出现404页面
+
+使用history模式模式的，内部操作是通过pushState和replaceState这两个方法改变url却不触发页面刷新，所以一旦用户进行刷新就容易出现404错误，需要后端配置找不到匹配路径时重新定到index页面
+
+### 12、v-for与v-if的优先级问题
+
+v-for比v-if的优先级更高，当两者放在同一个元素上的时候，永远是先循环再条件判断，会造成资源浪费。所以我们应该避免将这两个指令放在同一个元素上。如果是想要过滤掉数组中的某些值，可以在computed计算属性中使用filter过滤，或是在外层套上template去条件判断。
 
 
 
@@ -226,7 +260,7 @@ router-link：使用to属性跳转到对应路径
 
 router-view: 占位符，表示路径跳转对应的组件放在什么位置
 
-keep-alive: 使用组件保持活跃，不会重复created和destroyed。具有属性include和exclude，利用组件实例中的name名字选择哪些组件需要保持活跃。使用keep-alive组件时具有两个函数actived和disactived
+keep-alive: 使用组件保持活跃，不会重复created和destroyed。具有属性include和exclude，利用组件实例中的name名字选择哪些组件需要保持活跃。使用keep-alive组件时具有两个函数actived和deactived
 
 ### 6、路由传参params和query
 
@@ -260,13 +294,13 @@ this.$route表示当前正在跳转的路由器对象，可调用其path（）�
 
 全局导航守卫（beforeEach通常用来验证登录、beforeResolve、beforeAfter）
 
-路由独享守卫（beforEnter）、组件内守卫（beforeRouterEnter、beforeRouterUpdate、beforeRouterLeave通常用来未保存修改就离开）
+路由独享守卫（beforeEnter）、组件内守卫（beforeRouterEnter、beforeRouterUpdate、beforeRouterLeave通常用来未保存修改就离开）
 
-beforeRouterEnter不能访问this，因为在导航确定之前，组件还未创建。befroe前的钩子必须调用next（）函数进入下一个钩子
+beforeRouterEnter不能访问this，因为在导航确定之前，组件还未创建。before前的钩子必须调用next（）函数进入下一个钩子
 
 ### 9、如何响应路由参数的变化
 
-当使用路由参数，如从user/foo到use/bar时，由于都是渲染同一个组件，所以组件会进行复用，这意味着组件的生命周期钩子函数不会再被调用
+当使用路由参数，如从user/foo到user/bar时，由于都是渲染同一个组件，所以组件会进行复用，这意味着组件的生命周期钩子函数不会再被调用
 
 ```javascript
 //watch监听方式
